@@ -35,3 +35,11 @@ async def get_single_post(id: int) -> dict:
             return {
                 "data": post
             }
+
+@app.post("/posts", tags=["posts"])
+async def add_post(post: PostSchema) -> dict:
+    post.id = len(posts) + 1
+    posts.append(post.dict())
+    return {
+        "data": "post added."
+    }
