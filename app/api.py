@@ -5,6 +5,11 @@ from fastapi import FastAPI, Body
 from app.model import PostSchema, UserSchema, UserLoginSchema
 # from app.auth.auth_handler import signJWT
 
+import couchdb
+
+couch = couchdb.Server('http://couchdb00.hagopian.net:5984/')
+db = couch['hieofone2']
+
 posts = [
     {
         "id": 1,
@@ -43,6 +48,11 @@ async def get_single_post(id: int) -> dict:
 async def add_post(post: PostSchema) -> dict:
     post.id = len(posts) + 1
     posts.append(post.dict())
+
+# Save to CouchDB
+    doc = post.dict()
+    db.save(doc)
+
     return {
         "data": "post added."
     }
