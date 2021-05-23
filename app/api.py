@@ -31,9 +31,8 @@ async def get_posts() -> dict:
     return { "data": posts }
 
 @app.get("/couch/{id}", tags=["posts"])
-async def get_single_doc(id: int) -> dict:
-# Can't figure out how to pass in the id - silly!
-    doc = db['e2082f83ebe29de3fdb40faa2a014412']
+async def get_single_doc(id: str) -> dict:
+    doc = db[id]
     return {
         "data": doc
     }
