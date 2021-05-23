@@ -1,8 +1,9 @@
 # app/api.py
 
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Depends
 
 from app.model import PostSchema, UserSchema, UserLoginSchema
+from app.auth.auth_bearer import JWTBearer
 from app.auth.auth_handler import signJWT
 
 import couchdb
@@ -56,7 +57,7 @@ async def get_single_post(id: int) -> dict:
                 "data": post
             }
 
-@app.post("/posts", tags=["posts"])
+@app.post("/posts", dependencies=[Depends(JWTBearer())], tags=["posts"])
 async def add_post(post: PostSchema) -> dict:
     post.id = len(posts) + 1
     posts.append(post.dict())
@@ -81,3 +82,4 @@ async def user_login(user: UserLoginSchema = Body(...)):
     return {
         "error": "Wrong login details!"
     }
+
