@@ -7,6 +7,13 @@ from app.auth.auth_bearer import JWTBearer
 from app.auth.auth_handler import signJWT
 
 import couchdb
+from couchdb.mapping import Document, TextField
+
+class Person(Document):
+    fullname = TextField()
+    email = TextField()
+    password = TextField()
+
 
 couch = couchdb.Server('http://couchdb00.hagopian.net:5984/')
 db = couch['hieofone2']
@@ -24,10 +31,21 @@ users = []
 app = FastAPI()
 
 def check_user(data: UserLoginSchema):
-    for user in users:
-        if user.email == data.email and user.password == data.password:
-            return True
-    return False
+#    for user in users:
+#        if user.email == data.email and user.password == data.password:
+#            return True
+#    doc = db[data.email]
+    entryValid: bool = False
+    person = Person.load(db, data.email)
+    try:
+        passwd = person.password
+    except:
+        passwd = None
+    if passwd == data.password:
+        return True
+    else:
+        return False
+
 
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
@@ -63,7 +81,7 @@ async def add_post(post: PostSchema) -> dict:
     posts.append(post.dict())
 
 # Save to CouchDB
-    doc = post.dict()
+    doc = post.dict() | {'_id': 'bar'}
     db.save(doc)
 
     return {
@@ -72,8 +90,16 @@ async def add_post(post: PostSchema) -> dict:
 
 @app.post("/user/signup", tags=["user"])
 async def create_user(user: UserSchema = Body(...)):
-     users.append(user) # replace with db call, making sure to hash the password first
-     return signJWT(user.email)
+    users.append(user) # replace with db call, making sure to hash the password first
+    person = Person.load(db, user.email)
+    if person == None:
+        db.save(user.dict() | {'_id': user.email})       
+    else:
+        if person.email == user.email:
+            return {
+            "error": "User already exists!"
+        }
+    return signJWT(user.email)
 
 @app.post("/user/login", tags=["user"])
 async def user_login(user: UserLoginSchema = Body(...)):
