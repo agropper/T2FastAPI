@@ -1,6 +1,9 @@
 # app/api.py
 
-from fastapi import FastAPI, Body, Depends
+from fastapi import FastAPI, Body, Depends, Form, Request
+
+from fastapi.templating import Jinja2Templates
+
 
 from app.model import PostSchema, UserSchema, UserLoginSchema
 from app.auth.auth_bearer import JWTBearer
@@ -29,6 +32,7 @@ posts = [
 users = []
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates/")
 
 def check_user(data: UserLoginSchema):
 #    for user in users:
@@ -50,6 +54,16 @@ def check_user(data: UserLoginSchema):
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"message": "Welcome to your blog!."}
+
+@app.get("/form")
+def form_post(request: Request):
+    result = "Type a number"
+    return templates.TemplateResponse('form.html', context={'request': request, 'result': result})
+
+@app.post("/form")
+def form_post(request: Request, num: int = Form(...)):
+    result = "A result"
+    return templates.TemplateResponse('form.html', context={'request': request, 'result': result})
 
 @app.get("/posts", tags=["posts"])
 async def get_posts() -> dict:
