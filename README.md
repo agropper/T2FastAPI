@@ -1,9 +1,9 @@
 # T2FastAPI
-* This is a staging repo for the standards-based longitudinal health record project https://github.com/HIEofOne/Trustee-Community. Check out the Trustee Community wiki https://github.com/HIEofOne/Trustee-Community/wiki for background and a sequence diagram.
+* This is a staging repo for the standards-based [longitudinal health record project](https://github.com/HIEofOne/Trustee-Community). Check out the Trustee Community [wiki](https://github.com/HIEofOne/Trustee-Community/wiki) for background and a sequence diagram.
 * Code gets pulled to Trustee Community only after it can run on DO App Platform.
-* Implementation notes are on the wiki https://github.com/agropper/T2FastAPI/wiki
+* **Implementation notes are on the [wiki](https://github.com/agropper/T2FastAPI/wiki)**
 
-Trustee is different from other health records in that it is self-sovereign to the patient. The Trustee is (soon to be) a GNAP Authorization Server https://www.ietf.org/archive/id/draft-ietf-gnap-core-protocol-05.html Health record elements are W3C Verifiable Credentials (VC) and/or FHIR standard resources. W3C Decentralized Identifiers (DID) are used when practical. 
+Trustee is different from other health records in that it is self-sovereign to the patient. The Trustee is (soon to be) a [GNAP Authorization Server](https://www.ietf.org/archive/id/draft-ietf-gnap-core-protocol-05.html). Health record elements are W3C Verifiable Credentials (VC) and/or FHIR standard resources. W3C Decentralized Identifiers (DID) are used when practical. 
 
 Here are the key Trustee components and API endpoints to be (eventually) demonstrated:
 * Community Home: http://localhost:8081/ Where new patients subscribe to a Trustee or sign-in to an existing one.
