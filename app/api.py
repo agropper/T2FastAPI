@@ -1,7 +1,9 @@
 # app/api.py
+import os
+import stripe
 
 from fastapi import FastAPI, Body, Depends, Form, Request
-
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 
@@ -11,6 +13,8 @@ from app.auth.auth_handler import signJWT
 
 import couchdb
 from couchdb.mapping import Document, TextField
+
+from decouple import config
 
 class Person(Document):
     fullname = TextField()
@@ -29,11 +33,6 @@ posts = [
     }
 ]
 
-users = []
-
-app = FastAPI()
-templates = Jinja2Templates(directory="templates/")
-
 def check_user(data: UserLoginSchema):
 #    for user in users:
 #        if user.email == data.email and user.password == data.password:
@@ -51,9 +50,62 @@ def check_user(data: UserLoginSchema):
         return False
 
 
-@app.get("/", tags=["root"])
-async def read_root() -> dict:
-    return {"message": "Welcome to your blog!."}
+users = []
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates/")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# stripe.api_key = os.environ["STRIPE_KEY"]
+# This is a terrible idea, only used for demo purposes!
+stripe.api_key = config("STRIPE_SECRET_KEY")
+app.state.stripe_customer_id = None
+
+
+
+# @app.get("/", tags=["root"])
+# async def read_root() -> dict:
+#    return {"message": "Welcome to your blog!."}
+
+@app.get("/")
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "hasCustomer": app.state.stripe_customer_id is not None})
+
+
+@app.get("/success")
+async def success(request: Request):
+    return templates.TemplateResponse("success.html", {"request": request})
+
+
+@app.get("/cancel")
+async def cancel(request: Request):
+    return templates.TemplateResponse("cancel.html", {"request": request})
+
+
+@app.post("/create-checkout-session")
+async def create_checkout_session(request: Request):
+    data = await request.json()
+
+    if not app.state.stripe_customer_id:
+        customer = stripe.Customer.create(
+            description="Demo customer",
+        )
+        app.state.stripe_customer_id = customer["id"]
+
+    checkout_session = stripe.checkout.Session.create(
+        customer=app.state.stripe_customer_id,
+        success_url="http://localhost:8000/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url="http://localhost:8000/cancel",
+        payment_method_types=["card"],
+        mode="subscription",
+        line_items=[{
+            "price": data["priceId"],
+            "quantity": 1
+        }],
+    )
+    return {"sessionId": checkout_session["id"]}
+
+
 
 @app.get("/form")
 def form_post(request: Request):
