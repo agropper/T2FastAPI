@@ -94,8 +94,8 @@ async def create_checkout_session(request: Request):
 
     checkout_session = stripe.checkout.Session.create(
         customer=app.state.stripe_customer_id,
-        success_url="http://localhost:8000/success?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url="http://localhost:8000/cancel",
+        success_url="http://localhost:8081/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url="http://localhost:8081/cancel",
         payment_method_types=["card"],
         mode="subscription",
         line_items=[{
@@ -105,6 +105,14 @@ async def create_checkout_session(request: Request):
     )
     return {"sessionId": checkout_session["id"]}
 
+
+@app.post("/create-portal-session")
+async def create_portal_session():
+    session = stripe.billing_portal.Session.create(
+        customer=app.state.stripe_customer_id,
+        return_url="http://localhost:8081"
+    )
+    return {"url": session.url}
 
 
 @app.get("/form")
