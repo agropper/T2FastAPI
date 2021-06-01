@@ -2,7 +2,7 @@
 import os
 import stripe
 
-from fastapi import FastAPI, Body, Depends, Form, Request
+from fastapi import FastAPI, Body, Depends, Form, Request, Header
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -113,6 +113,33 @@ async def create_portal_session():
         return_url="http://localhost:8081"
     )
     return {"url": session.url}
+
+
+@app.post("/webhook")
+async def webhook_received(request: Request, stripe_signature: str = Header(str)):
+    webhook_secret = config("STRIPE_WEBHOOK_SECRET")
+    data = await request.body()
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=data,
+            sig_header=stripe_signature,
+            secret=webhook_secret
+        )
+        event_data = event['data']
+    except Exception as e:
+        return {"error": str(e)}
+
+    event_type = event['type']
+    if event_type == 'checkout.session.completed':
+        print('checkout session completed')
+    elif event_type == 'invoice.paid':
+        print('invoice paid')
+    elif event_type == 'invoice.payment_failed':
+        print('invoice payment failed')
+    else:
+        print(f'unhandled event: {event_type}')
+    
+    return {"status": "success"}
 
 
 @app.get("/form")
